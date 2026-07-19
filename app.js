@@ -255,7 +255,7 @@ $("btnMis").onclick = async () => {
   show("misView");
   $("misLista").innerHTML = "<p class='muted'>Cargando…</p>";
   const { data: visitas } = await sb.from("ms_visitas")
-    .select("id, created_at, tipo, estado, score, resumen_ia, pais, ms_tiendas(nombre, formato)")
+    .select("id, created_at, tipo, estado, score, resumen_ia, productos, pais, ms_tiendas(nombre, formato)")
     .eq("shopper_id", usuario.id).order("created_at", { ascending: false }).limit(30);
   $("misLista").innerHTML = "";
   if (!visitas?.length) { $("misLista").innerHTML = "<p class='muted'>Aún no tienes visitas.</p>"; return; }
@@ -263,6 +263,19 @@ $("btnMis").onclick = async () => {
 };
 
 function claseScore(s) { return s == null ? "na" : s >= 8 ? "ok" : s >= 6 ? "mid" : "bad"; }
+
+// productos consolidados por la IA (marca + formato + gramaje + precio enlazado entre fotos)
+function productosHtml(prods) {
+  if (!Array.isArray(prods) || !prods.length) return "";
+  const filas = prods.map((p) => {
+    const nombre = [p.marca, p.sabor_o_variedad].filter(Boolean).join(" ") || "(producto)";
+    const formato = [p.presentacion, p.gramaje].filter(Boolean).join(" ");
+    const precio = p.precio ? `${p.precio} ${p.moneda || ""}` : "s/precio";
+    const enlace = p.origen_precio === "enlazado-otra-foto" ? " 🔗" : "";
+    return `<div class="prod"><span>${nombre}${p.tostado ? ` <span class="muted">· ${p.tostado}</span>` : ""}</span><span class="muted">${formato}</span><b>${precio}${enlace}</b></div>`;
+  }).join("");
+  return `<div class="prods">${filas}</div>`;
+}
 
 async function tarjetaVisita(v, adminExtra = "") {
   const d = document.createElement("div"); d.className = "card visita-item";
@@ -273,6 +286,7 @@ async function tarjetaVisita(v, adminExtra = "") {
     </div>
     <p class="muted">${fecha} · ${v.tipo} · ${v.pais || ""} ${adminExtra}</p>
     ${v.resumen_ia ? `<p style="font-size:0.9rem">${v.resumen_ia}</p>` : `<p class="muted">${v.estado === "analizada" ? "" : "🤖 Análisis en proceso…"}</p>`}
+    ${productosHtml(v.productos)}
     <div class="thumbs"></div>`;
   const { data: fs } = await sb.from("ms_fotos").select("id, storage_path, analisis").eq("visita_id", v.id);
   const cont = d.querySelector(".thumbs");
@@ -296,7 +310,7 @@ $("btnAdmin").onclick = async () => {
   $("adminLista").innerHTML = "<p class='muted'>Cargando…</p>";
 
   const [{ data: visitas }, { data: fotosAll }] = await Promise.all([
-    sb.from("ms_visitas").select("id, created_at, tipo, estado, score, resumen_ia, pais, shopper_email, ms_tiendas(nombre, formato)").order("created_at", { ascending: false }).limit(40),
+    sb.from("ms_visitas").select("id, created_at, tipo, estado, score, resumen_ia, productos, pais, shopper_email, ms_tiendas(nombre, formato)").order("created_at", { ascending: false }).limit(40),
     sb.from("ms_fotos").select("etiquetas").not("etiquetas", "eq", "{}").limit(1000),
   ]);
 
