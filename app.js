@@ -28,11 +28,12 @@ $("btnEntrar").onclick = async () => {
   $("authMsg").textContent = "Entrando…";
   let { data, error } = await sb.auth.signInWithPassword({ email, password });
   if (error) {
-    // primera vez: crear cuenta sola
-    const alta = await sb.auth.signUp({ email, password });
+    // primera vez: crear cuenta sola (se auto-confirma) y entrar de inmediato
+    const alta = await sb.auth.signUp({ email, password, options: { data: { app: "ms" } } });
     if (alta.error) { $("authMsg").textContent = "No se pudo entrar: " + alta.error.message; return; }
-    data = alta.data;
-    if (!alta.data.session) { $("authMsg").textContent = "Cuenta creada. Revisa tu correo para confirmar y vuelve a entrar."; return; }
+    const reintento = await sb.auth.signInWithPassword({ email, password });
+    if (reintento.error) { $("authMsg").textContent = "Cuenta creada. Intenta entrar de nuevo."; return; }
+    data = reintento.data;
   }
   usuario = data.session.user;
   await entrar();
