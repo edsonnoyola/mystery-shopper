@@ -1,0 +1,15 @@
+{
+  "name": "Mystery Shopper",
+  "short_name": "MysteryShop",
+  "description": "Auditorías de mystery shopper con fotos y análisis IA",
+  "start_url": "index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#171210",
+  "theme_color": "#171210",
+  "lang": "es",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

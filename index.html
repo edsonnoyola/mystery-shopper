@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mystery Shopper</title>
+<meta name="theme-color" content="#171210">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mystery Shopper">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="top">
+  <span class="logo">☕ Mystery Shopper</span>
+  <button id="btnSalir" class="ghost hidden">Salir</button>
+</header>
+
+<main id="app">
+
+  <!-- LOGIN -->
+  <section id="authView" class="view">
+    <h1>Entrar</h1>
+    <p class="muted">Usa tu correo. Si es tu primera vez, la cuenta se crea sola.</p>
+    <input id="authEmail" type="email" placeholder="correo@ejemplo.com" autocomplete="email">
+    <input id="authPass" type="password" placeholder="contraseña" autocomplete="current-password">
+    <button id="btnEntrar" class="primary">Entrar</button>
+    <p id="authMsg" class="msg"></p>
+  </section>
+
+  <!-- HOME -->
+  <section id="homeView" class="view hidden">
+    <h1>Hola 👋</h1>
+    <button id="btnNueva" class="primary big">📸 Nueva visita</button>
+    <button id="btnMis" class="secondary big">🗂 Mis visitas</button>
+    <button id="btnAdmin" class="secondary big hidden">📊 Panel admin</button>
+  </section>
+
+  <!-- NUEVA VISITA -->
+  <section id="visitaView" class="view hidden">
+    <h1>Nueva visita</h1>
+
+    <div id="pasoGps" class="card">
+      <p id="gpsEstado">📍 Detectando tu ubicación…</p>
+      <p id="gpsDireccion" class="muted"></p>
+    </div>
+
+    <div id="pasoTienda" class="card hidden">
+      <p class="label">Tienda detectada <span class="muted">(toca para cambiar)</span></p>
+      <div id="tiendaChips" class="chips"></div>
+      <input id="tiendaManual" placeholder="¿No aparece? Escribe el nombre" class="hidden">
+      <button id="btnTiendaOtra" class="ghost small">Otra tienda…</button>
+    </div>
+
+    <div id="pasoFotos" class="card hidden">
+      <p class="label">Fotos <span class="muted">— anaquel, precios, producto, local</span></p>
+      <div id="fotosGrid" class="fotos-grid"></div>
+      <label class="btn-foto">
+        📷 Tomar foto
+        <input id="inputFoto" type="file" accept="image/*" capture="environment" hidden>
+      </label>
+      <textarea id="comentarioVisita" placeholder="Comentario general (opcional)"></textarea>
+      <button id="btnEnviar" class="primary big" disabled>Enviar visita</button>
+      <p id="envioMsg" class="msg"></p>
+    </div>
+
+    <button class="ghost volver">← Volver</button>
+  </section>
+
+  <!-- MIS VISITAS -->
+  <section id="misView" class="view hidden">
+    <h1>Mis visitas</h1>
+    <div id="misLista"></div>
+    <button class="ghost volver">← Volver</button>
+  </section>
+
+  <!-- ADMIN -->
+  <section id="adminView" class="view hidden">
+    <h1>Panel admin</h1>
+    <div id="adminResumen" class="card"></div>
+    <h2>Hallazgos más repetidos</h2>
+    <div id="adminEtiquetas" class="chips"></div>
+    <h2>Visitas recientes</h2>
+    <div id="adminLista"></div>
+    <button class="ghost volver">← Volver</button>
+  </section>
+
+</main>
+
+<div id="modalFoto" class="modal hidden"><img id="modalImg"><pre id="modalAnalisis"></pre><button class="ghost" onclick="document.getElementById('modalFoto').classList.add('hidden')">Cerrar</button></div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
