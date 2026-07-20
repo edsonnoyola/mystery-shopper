@@ -64,7 +64,7 @@ let fotos = [];          // [{blob, url, comentario}]
 
 $("btnNueva").onclick = () => {
   geo = lugar = tiendaSel = null; tiendas = []; fotos = [];
-  $("fotosGrid").innerHTML = ""; $("comentarioVisita").value = ""; $("envioMsg").textContent = "";
+  $("fotosLista").innerHTML = ""; $("comentarioVisita").value = ""; $("envioMsg").textContent = ""; $("fotoMsg").textContent = "";
   $("tiendaManual").classList.add("hidden"); $("tiendaManual").value = "";
   $("pasoTienda").classList.add("hidden"); $("pasoFotos").classList.add("hidden");
   $("gpsEstado").textContent = "📍 Detectando tu ubicación…"; $("gpsDireccion").textContent = "";
@@ -159,34 +159,65 @@ $("btnTiendaOtra").onclick = () => {
 $("inputFoto").onchange = async (ev) => {
   const file = ev.target.files[0];
   if (!file) return;
-  const blob = await comprimir(file);
-  const f = { blob, url: URL.createObjectURL(blob), comentario: "" };
-  fotos.push(f);
-  pintarFotos();
+  $("fotoMsg").textContent = "⏳ Procesando foto…";
+  try {
+    const blob = await comprimir(file);
+    fotos.push({ blob, url: URL.createObjectURL(blob), comentario: "" });
+    $("fotoMsg").textContent = "";
+    pintarFotos(true);
+  } catch (e) {
+    console.error(e);
+    // si algo falla, guardamos la foto original tal cual: nunca se pierde
+    fotos.push({ blob: file, url: URL.createObjectURL(file), comentario: "" });
+    $("fotoMsg").textContent = "";
+    pintarFotos(true);
+  }
   ev.target.value = "";
 };
 
-function pintarFotos() {
-  const g = $("fotosGrid"); g.innerHTML = "";
+function pintarFotos(scrollAlFinal = false) {
+  const g = $("fotosLista"); g.innerHTML = "";
   fotos.forEach((f, i) => {
-    const d = document.createElement("div"); d.className = "ft";
-    const img = document.createElement("img"); img.src = f.url;
-    const del = document.createElement("button"); del.className = "del"; del.textContent = "✕";
-    del.onclick = () => { fotos.splice(i, 1); pintarFotos(); };
-    const inp = document.createElement("input"); inp.placeholder = "comentario"; inp.value = f.comentario;
-    inp.oninput = () => (f.comentario = inp.value);
-    d.append(img, del, inp); g.appendChild(d);
+    const d = document.createElement("div"); d.className = "foto-card";
+
+    const head = document.createElement("div"); head.className = "encabezado";
+    const num = document.createElement("span"); num.className = "numero"; num.textContent = `Foto ${i + 1}`;
+    const del = document.createElement("button"); del.className = "del"; del.textContent = "✕ Quitar";
+    del.onclick = () => { URL.revokeObjectURL(f.url); fotos.splice(i, 1); pintarFotos(); };
+    head.append(num, del);
+
+    const img = document.createElement("img"); img.src = f.url; img.alt = `Foto ${i + 1}`;
+
+    const ta = document.createElement("textarea");
+    ta.placeholder = "Descripción de esta foto (ej. 'precio del frasco 200g', 'anaquel vacío')";
+    ta.value = f.comentario;
+    ta.oninput = () => (f.comentario = ta.value);
+
+    d.append(head, img, ta); g.appendChild(d);
   });
   $("btnEnviar").disabled = fotos.length === 0;
+  if (scrollAlFinal && g.lastElementChild) g.lastElementChild.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
+// compresión robusta: usa <img> (respeta orientación EXIF en todos los navegadores);
+// si el navegador no puede, regresa el archivo original
 async function comprimir(file, maxLado = 1600, calidad = 0.8) {
-  const bmp = await createImageBitmap(file);
-  const esc = Math.min(1, maxLado / Math.max(bmp.width, bmp.height));
-  const c = document.createElement("canvas");
-  c.width = Math.round(bmp.width * esc); c.height = Math.round(bmp.height * esc);
-  c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
-  return await new Promise((res) => c.toBlob(res, "image/jpeg", calidad));
+  const url = URL.createObjectURL(file);
+  try {
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    const w = img.naturalWidth, h = img.naturalHeight;
+    if (!w || !h) return file;
+    const esc = Math.min(1, maxLado / Math.max(w, h));
+    const c = document.createElement("canvas");
+    c.width = Math.round(w * esc); c.height = Math.round(h * esc);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    const blob = await new Promise((res) => c.toBlob(res, "image/jpeg", calidad));
+    return blob || file;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
 }
 
 // ---------- ENVIAR ----------
@@ -233,7 +264,9 @@ $("btnEnviar").onclick = async () => {
     for (let i = 0; i < fotos.length; i++) {
       $("envioMsg").textContent = `Subiendo foto ${i + 1} de ${fotos.length}…`;
       const path = `${visita.id}/${i + 1}.jpg`;
-      const { error: es } = await sb.storage.from("ms-fotos").upload(path, fotos[i].blob, { contentType: "image/jpeg" });
+      const tiposOk = ["image/jpeg", "image/png", "image/webp"];
+      const ct = tiposOk.includes(fotos[i].blob.type) ? fotos[i].blob.type : "image/jpeg";
+      const { error: es } = await sb.storage.from("ms-fotos").upload(path, fotos[i].blob, { contentType: ct });
       if (es) throw es;
       const { data: foto, error: ef } = await sb.from("ms_fotos").insert({
         visita_id: visita.id, storage_path: path, comentario: fotos[i].comentario || null,
