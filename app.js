@@ -97,15 +97,26 @@ function detectarUbicacion() {
   }, { enableHighAccuracy: true, timeout: 12000 });
 }
 
+// moneda automática según el país donde estás parado
+const MONEDAS = {
+  MX: "MXN", US: "USD", CO: "COP", AR: "ARS", CL: "CLP", PE: "PEN", BR: "BRL",
+  GT: "GTQ", CR: "CRC", PA: "USD", EC: "USD", SV: "USD", HN: "HNL", NI: "NIO",
+  DO: "DOP", BO: "BOB", PY: "PYG", UY: "UYU", VE: "VES", CU: "CUP", PR: "USD",
+  ES: "EUR", DE: "EUR", FR: "EUR", IT: "EUR", PT: "EUR", NL: "EUR", BE: "EUR",
+  GB: "GBP", CA: "CAD", JP: "JPY", CN: "CNY", KR: "KRW", IN: "INR", AU: "AUD",
+};
+
 async function reverseGeocode() {
   try {
     const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${geo.lat}&lon=${geo.lng}&accept-language=es`);
     const j = await r.json();
     const a = j.address || {};
+    const cc = (a.country_code || "").toUpperCase();
     lugar = {
       direccion: [a.road, a.house_number, a.suburb || a.neighbourhood].filter(Boolean).join(" "),
       ciudad: a.city || a.town || a.village || a.municipality || "",
-      pais: a.country || "", pais_codigo: (a.country_code || "").toUpperCase(),
+      pais: a.country || "", pais_codigo: cc,
+      moneda: MONEDAS[cc] || "",
     };
   } catch { /* sin internet: seguimos */ }
 }
@@ -146,9 +157,10 @@ function distM(lat1, lon1, lat2, lon2) {
 function pintarLugar() {
   tiendaSel = tiendas[0] || null;
   const ubic = [lugar?.ciudad, lugar?.pais].filter(Boolean).join(", ");
+  const mon = lugar?.moneda ? ` · precios en ${lugar.moneda}` : "";
   $("lugarLinea").textContent = tiendaSel
-    ? `📍 ${tiendaSel.nombre} · ${tiendaSel.formato} · ${tiendaSel.dist} m ${ubic ? "· " + ubic : ""} (toca para cambiar)`
-    : `📍 ${ubic || "Ubicación detectada"} — toca para elegir el lugar`;
+    ? `📍 ${tiendaSel.nombre} · ${tiendaSel.formato} · ${tiendaSel.dist} m ${ubic ? "· " + ubic : ""}${mon} (toca para cambiar)`
+    : `📍 ${ubic || "Ubicación detectada"}${mon} — toca para elegir el lugar`;
 }
 
 $("lugarCard").onclick = (e) => {
@@ -381,13 +393,14 @@ $("btnEnviar").onclick = async () => {
       comentario: $("comentarioVisita").value.trim() || null,
       evaluacion: Object.keys(evaluacion).length ? evaluacion : null,
       categoria: "cafe",
+      moneda: lugar?.moneda || null,
     }).select("id").single();
     if (ev) throw ev;
 
     if (cotizaciones.length) {
       await sb.from("ms_cotizaciones").insert(cotizaciones.map((c) => ({
         visita_id: visita.id, marca: c.marca || null, producto: c.producto || null,
-        formato: c.formato || null, precio: c.precio,
+        formato: c.formato || null, precio: c.precio, moneda: lugar?.moneda || "MXN",
       })));
     }
 
