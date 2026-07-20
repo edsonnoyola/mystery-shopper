@@ -54,6 +54,31 @@
       <button id="btnTiendaOtra" class="ghost small">Otra tienda…</button>
     </div>
 
+    <div id="pasoEval" class="card hidden">
+      <p class="label">Evaluación del servicio <span class="muted">— toca la calificación (1 = malo, 5 = excelente)</span></p>
+      <div class="eval-fila" data-campo="saludo"><span>👋 Saludo y atención</span><div class="stars"></div></div>
+      <div class="eval-fila" data-campo="conocimiento"><span>🧠 Conocimiento del producto</span><div class="stars"></div></div>
+      <div class="eval-fila" data-campo="claridad_precios"><span>🏷️ Claridad de precios</span><div class="stars"></div></div>
+      <div class="eval-fila" data-campo="limpieza"><span>🧹 Limpieza del lugar</span><div class="stars"></div></div>
+      <div class="eval-fila" data-campo="marca_mencionada"><span>⭐ ¿Mencionaron / recomendaron nuestra marca?</span>
+        <div class="sino"><button type="button" data-v="si">Sí</button><button type="button" data-v="no">No</button></div>
+      </div>
+    </div>
+
+    <div id="pasoCotiza" class="card hidden">
+      <p class="label">Precios cotizados <span class="muted">— lo que te dijeron o viste (opcional)</span></p>
+      <div id="cotizaLista"></div>
+      <div class="cotiza-form">
+        <input id="cotMarca" placeholder="Marca (ej. Café Oro)">
+        <input id="cotProducto" placeholder="Producto / sabor (ej. Clásico soluble)">
+        <div class="cotiza-linea">
+          <input id="cotFormato" placeholder="Formato (frasco 200g)">
+          <input id="cotPrecio" type="number" inputmode="decimal" placeholder="Precio">
+        </div>
+        <button id="btnAgregarCotiza" class="secondary small" type="button">+ Agregar precio</button>
+      </div>
+    </div>
+
     <div id="pasoFotos" class="card hidden">
       <p class="label">Fotos <span class="muted">— anaquel, precios, producto, local</span></p>
       <p class="muted" style="margin-top:0">💡 Toma una foto del producto y otra de su etiqueta de precio: la IA las enlaza sola.</p>

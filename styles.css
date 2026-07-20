@@ -74,6 +74,35 @@ button.big { padding: 1.15rem; font-size: 1.08rem; }
   border: 1.5px dashed var(--accent); color: var(--accent);
   border-radius: 12px; padding: 1rem; font-weight: 650; margin-bottom: 0.7rem;
 }
+/* evaluación de servicio (estilo Cesantoni) */
+.eval-fila { padding: 0.55rem 0; border-bottom: 1px solid var(--line); }
+.eval-fila:last-child { border-bottom: none; }
+.eval-fila > span { display: block; font-size: 0.92rem; margin-bottom: 0.4rem; }
+.stars { display: flex; gap: 0.45rem; }
+.stars button {
+  flex: 1; margin: 0; padding: 0.55rem 0; border-radius: 9px;
+  background: var(--surface2); border: 1px solid var(--line); color: var(--muted);
+  font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.stars button.sel { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.sino { display: flex; gap: 0.45rem; }
+.sino button {
+  flex: 1; margin: 0; padding: 0.55rem 0; border-radius: 9px;
+  background: var(--surface2); border: 1px solid var(--line); color: var(--muted); font-weight: 700;
+}
+.sino button.sel { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+/* cotizaciones */
+.cotiza-linea { display: flex; gap: 0.5rem; }
+.cotiza-linea input { flex: 1; }
+.cotiza-item {
+  display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;
+  background: var(--surface2); border: 1px solid var(--line); border-radius: 10px;
+  padding: 0.5rem 0.8rem; margin-bottom: 0.5rem; font-size: 0.88rem;
+}
+.cotiza-item b { color: var(--accent); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cotiza-item .del-cot { background: none; color: var(--danger); width: auto; margin: 0; padding: 0 0.3rem; font-size: 1rem; }
+
 /* panel de fotos: cada foto grande con su descripción debajo */
 .foto-card {
   background: var(--surface2); border: 1px solid var(--line); border-radius: 12px;

@@ -61,17 +61,68 @@ let lugar = null;        // reverse geocode {direccion, ciudad, pais, pais_codig
 let tiendas = [];        // candidatas OSM
 let tiendaSel = null;    // seleccionada
 let fotos = [];          // [{blob, url, comentario}]
+let evaluacion = {};     // {saludo, conocimiento, claridad_precios, limpieza, marca_mencionada}
+let cotizaciones = [];   // [{marca, producto, formato, precio}]
 
 $("btnNueva").onclick = () => {
-  geo = lugar = tiendaSel = null; tiendas = []; fotos = [];
+  geo = lugar = tiendaSel = null; tiendas = []; fotos = []; evaluacion = {}; cotizaciones = [];
   $("fotosLista").innerHTML = ""; $("comentarioVisita").value = ""; $("envioMsg").textContent = ""; $("fotoMsg").textContent = "";
   $("tiendaManual").classList.add("hidden"); $("tiendaManual").value = "";
   $("pasoTienda").classList.add("hidden"); $("pasoFotos").classList.add("hidden");
+  $("pasoEval").classList.add("hidden"); $("pasoCotiza").classList.add("hidden");
+  document.querySelectorAll(".stars button.sel, .sino button.sel").forEach((b) => b.classList.remove("sel"));
+  pintarCotizaciones();
   $("gpsEstado").textContent = "📍 Detectando tu ubicación…"; $("gpsDireccion").textContent = "";
   $("btnEnviar").disabled = true;
   show("visitaView");
   detectarUbicacion();
 };
+
+// ---------- EVALUACIÓN (estilo Cesantoni: scores 1-5 + mención de marca) ----------
+document.querySelectorAll(".eval-fila .stars").forEach((cont) => {
+  const campo = cont.closest(".eval-fila").dataset.campo;
+  for (let v = 1; v <= 5; v++) {
+    const b = document.createElement("button"); b.type = "button"; b.textContent = v;
+    b.onclick = () => {
+      evaluacion[campo] = v;
+      [...cont.children].forEach((c, i) => c.classList.toggle("sel", i < v));
+    };
+    cont.appendChild(b);
+  }
+});
+document.querySelectorAll(".sino button").forEach((b) => {
+  b.onclick = () => {
+    evaluacion.marca_mencionada = b.dataset.v === "si";
+    b.parentElement.querySelectorAll("button").forEach((x) => x.classList.toggle("sel", x === b));
+  };
+});
+
+// ---------- COTIZACIONES ----------
+$("btnAgregarCotiza").onclick = () => {
+  const c = {
+    marca: $("cotMarca").value.trim(),
+    producto: $("cotProducto").value.trim(),
+    formato: $("cotFormato").value.trim(),
+    precio: parseFloat($("cotPrecio").value),
+  };
+  if (!c.marca && !c.producto) return;
+  if (isNaN(c.precio)) { $("envioMsg").textContent = "Ponle precio a la cotización."; return; }
+  cotizaciones.push(c);
+  ["cotMarca", "cotProducto", "cotFormato", "cotPrecio"].forEach((id) => ($(id).value = ""));
+  $("envioMsg").textContent = "";
+  pintarCotizaciones();
+};
+
+function pintarCotizaciones() {
+  const g = $("cotizaLista"); g.innerHTML = "";
+  cotizaciones.forEach((c, i) => {
+    const d = document.createElement("div"); d.className = "cotiza-item";
+    d.innerHTML = `<span>${c.marca} ${c.producto} <span class="muted">${c.formato || ""}</span></span><b>$${c.precio}</b>`;
+    const del = document.createElement("button"); del.className = "del-cot"; del.textContent = "✕"; del.type = "button";
+    del.onclick = () => { cotizaciones.splice(i, 1); pintarCotizaciones(); };
+    d.appendChild(del); g.appendChild(d);
+  });
+}
 
 function detectarUbicacion() {
   if (!navigator.geolocation) { $("gpsEstado").textContent = "⚠️ Tu navegador no tiene GPS. Escribe la tienda a mano."; mostrarPasoTienda(); return; }
@@ -146,6 +197,8 @@ function mostrarPasoTienda() {
   if (tiendas.length) tiendaSel = tiendas[0];
   else { $("tiendaManual").classList.remove("hidden"); $("btnTiendaOtra").classList.add("hidden"); }
   $("pasoTienda").classList.remove("hidden");
+  $("pasoEval").classList.remove("hidden");
+  $("pasoCotiza").classList.remove("hidden");
   $("pasoFotos").classList.remove("hidden");
 }
 
@@ -256,8 +309,17 @@ $("btnEnviar").onclick = async () => {
       lat: geo?.lat, lng: geo?.lng, precision_m: geo?.precision,
       pais: lugar?.pais, direccion: lugar?.direccion,
       comentario: $("comentarioVisita").value.trim() || null,
+      evaluacion: Object.keys(evaluacion).length ? evaluacion : null,
     }).select("id").single();
     if (ev) throw ev;
+
+    // cotizaciones capturadas a mano
+    if (cotizaciones.length) {
+      await sb.from("ms_cotizaciones").insert(cotizaciones.map((c) => ({
+        visita_id: visita.id, marca: c.marca || null, producto: c.producto || null,
+        formato: c.formato || null, precio: c.precio,
+      })));
+    }
 
     // 3. fotos → storage + fila + análisis IA
     const fotoIds = [];
@@ -293,7 +355,7 @@ $("btnMis").onclick = async () => {
   show("misView");
   $("misLista").innerHTML = "<p class='muted'>Cargando…</p>";
   const { data: visitas } = await sb.from("ms_visitas")
-    .select("id, created_at, tipo, estado, score, resumen_ia, productos, pais, ms_tiendas(nombre, formato)")
+    .select("id, created_at, tipo, estado, score, resumen_ia, productos, evaluacion, pais, ms_tiendas(nombre, formato), ms_cotizaciones(marca, producto, formato, precio, moneda)")
     .eq("shopper_id", usuario.id).order("created_at", { ascending: false }).limit(30);
   $("misLista").innerHTML = "";
   if (!visitas?.length) { $("misLista").innerHTML = "<p class='muted'>Aún no tienes visitas.</p>"; return; }
@@ -301,6 +363,24 @@ $("btnMis").onclick = async () => {
 };
 
 function claseScore(s) { return s == null ? "na" : s >= 8 ? "ok" : s >= 6 ? "mid" : "bad"; }
+
+// evaluación de servicio del shopper (1-5 por rubro + mención de marca)
+function evaluacionHtml(ev) {
+  if (!ev) return "";
+  const rubros = [["saludo", "👋"], ["conocimiento", "🧠"], ["claridad_precios", "🏷️"], ["limpieza", "🧹"]];
+  const partes = rubros.filter(([k]) => ev[k] != null).map(([k, ico]) => `${ico} ${ev[k]}/5`);
+  if (ev.marca_mencionada != null) partes.push(ev.marca_mencionada ? "⭐ nos mencionaron" : "⭐ NO nos mencionaron");
+  return partes.length ? `<p style="font-size:0.85rem; margin:0.3rem 0">${partes.join(" · ")}</p>` : "";
+}
+
+// cotizaciones capturadas a mano por el shopper
+function cotizacionesHtml(cots) {
+  if (!Array.isArray(cots) || !cots.length) return "";
+  const filas = cots.map((c) =>
+    `<div class="prod"><span>${[c.marca, c.producto].filter(Boolean).join(" ")}</span><span class="muted">${c.formato || ""}</span><b>$${c.precio} ${c.moneda || ""}</b></div>`
+  ).join("");
+  return `<div class="prods">${filas}</div>`;
+}
 
 // productos consolidados por la IA (marca + formato + gramaje + precio enlazado entre fotos)
 function productosHtml(prods) {
@@ -324,6 +404,8 @@ async function tarjetaVisita(v, adminExtra = "") {
     </div>
     <p class="muted">${fecha} · ${v.tipo} · ${v.pais || ""} ${adminExtra}</p>
     ${v.resumen_ia ? `<p style="font-size:0.9rem">${v.resumen_ia}</p>` : `<p class="muted">${v.estado === "analizada" ? "" : "🤖 Análisis en proceso…"}</p>`}
+    ${evaluacionHtml(v.evaluacion)}
+    ${cotizacionesHtml(v.ms_cotizaciones)}
     ${productosHtml(v.productos)}
     <div class="thumbs"></div>`;
   const { data: fs } = await sb.from("ms_fotos").select("id, storage_path, analisis").eq("visita_id", v.id);
@@ -348,7 +430,7 @@ $("btnAdmin").onclick = async () => {
   $("adminLista").innerHTML = "<p class='muted'>Cargando…</p>";
 
   const [{ data: visitas }, { data: fotosAll }] = await Promise.all([
-    sb.from("ms_visitas").select("id, created_at, tipo, estado, score, resumen_ia, productos, pais, shopper_email, ms_tiendas(nombre, formato)").order("created_at", { ascending: false }).limit(40),
+    sb.from("ms_visitas").select("id, created_at, tipo, estado, score, resumen_ia, productos, evaluacion, pais, shopper_email, ms_tiendas(nombre, formato), ms_cotizaciones(marca, producto, formato, precio, moneda)").order("created_at", { ascending: false }).limit(40),
     sb.from("ms_fotos").select("etiquetas").not("etiquetas", "eq", "{}").limit(1000),
   ]);
 
