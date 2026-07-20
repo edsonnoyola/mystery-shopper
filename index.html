@@ -33,34 +33,37 @@
   <!-- HOME -->
   <section id="homeView" class="view hidden">
     <h1>Hola 👋</h1>
-    <button id="btnNueva" class="primary big">📸 Nueva visita</button>
-    <button id="btnMis" class="secondary big">🗂 Mis visitas</button>
+    <button id="btnNueva" class="primary big">📸 Foto</button>
+    <button id="btnVideo" class="primary big">🎥 Video</button>
+    <button id="btnNota" class="secondary big">📝 Nota de un lugar</button>
+    <button id="btnMis" class="secondary big">🗂 Mis capturas</button>
     <button id="btnAdmin" class="secondary big hidden">📊 Panel admin</button>
   </section>
 
-  <!-- NUEVA VISITA -->
+  <!-- CAPTURA -->
   <section id="visitaView" class="view hidden">
-    <h1>Nueva visita</h1>
+
+    <div class="fila-captura">
+      <label class="btn-cap">📸 Foto<input id="inputFoto" type="file" accept="image/*" capture="environment" hidden></label>
+      <label class="btn-cap">🎥 Video<input id="inputVideo" type="file" accept="video/*" capture="environment" hidden></label>
+    </div>
+    <p id="fotoMsg" class="msg"></p>
+
+    <div id="fotosLista"></div>
+
+    <div class="card" id="lugarCard">
+      <p id="lugarLinea" class="muted" style="margin:0">📍 Detectando el lugar…</p>
+      <div id="tiendaChips" class="chips hidden"></div>
+      <input id="tiendaManual" placeholder="Escribe el nombre del lugar" class="hidden">
+    </div>
 
     <div class="card">
-      <p class="label">¿Qué estás evaluando?</p>
-      <div id="categoriaChips" class="chips"></div>
+      <textarea id="comentarioVisita" placeholder="Cuéntale a la IA: qué viste, qué te llamó la atención… (escribe o tócale 🎤)"></textarea>
+      <button id="btnMicNota" class="secondary small" type="button">🎤 Dictar con la voz</button>
     </div>
 
-    <div id="pasoGps" class="card">
-      <p id="gpsEstado">📍 Detectando tu ubicación…</p>
-      <p id="gpsDireccion" class="muted"></p>
-    </div>
-
-    <div id="pasoTienda" class="card hidden">
-      <p class="label">Tienda detectada <span class="muted">(toca para cambiar)</span></p>
-      <div id="tiendaChips" class="chips"></div>
-      <input id="tiendaManual" placeholder="¿No aparece? Escribe el nombre" class="hidden">
-      <button id="btnTiendaOtra" class="ghost small">Otra tienda…</button>
-    </div>
-
-    <div id="pasoEval" class="card hidden">
-      <p class="label">Evaluación del servicio <span class="muted">— toca la calificación (1 = malo, 5 = excelente)</span></p>
+    <details class="card">
+      <summary>⭐ Evaluación del servicio (opcional)</summary>
       <div class="eval-fila" data-campo="saludo"><span>👋 Saludo y atención</span><div class="stars"></div></div>
       <div class="eval-fila" data-campo="conocimiento"><span>🧠 Conocimiento del producto</span><div class="stars"></div></div>
       <div class="eval-fila" data-campo="claridad_precios"><span>🏷️ Claridad de precios</span><div class="stars"></div></div>
@@ -68,11 +71,11 @@
       <div class="eval-fila" data-campo="marca_mencionada"><span id="lblMarca">⭐ ¿Mencionaron / recomendaron nuestra marca?</span>
         <div class="sino"><button type="button" data-v="si">Sí</button><button type="button" data-v="no">No</button></div>
       </div>
-    </div>
+    </details>
 
-    <div id="pasoCotiza" class="card hidden">
-      <p class="label">Precios cotizados <span class="muted">— lo que te dijeron o viste (opcional)</span></p>
-      <div id="cotizaLista"></div>
+    <details class="card">
+      <summary>💲 Precios cotizados (opcional)</summary>
+      <div id="cotizaLista" style="margin-top:0.6rem"></div>
       <div class="cotiza-form">
         <input id="cotMarca" placeholder="Marca (ej. Café Oro)">
         <input id="cotProducto" placeholder="Producto / sabor (ej. Clásico soluble)">
@@ -82,21 +85,10 @@
         </div>
         <button id="btnAgregarCotiza" class="secondary small" type="button">+ Agregar precio</button>
       </div>
-    </div>
+    </details>
 
-    <div id="pasoFotos" class="card hidden">
-      <p class="label">Fotos <span class="muted">— anaquel, precios, producto, local</span></p>
-      <p class="muted" style="margin-top:0">💡 Toma una foto del producto y otra de su etiqueta de precio: la IA las enlaza sola.</p>
-      <label class="btn-foto">
-        📷 Tomar foto
-        <input id="inputFoto" type="file" accept="image/*" capture="environment" hidden>
-      </label>
-      <p id="fotoMsg" class="msg"></p>
-      <div id="fotosLista"></div>
-      <textarea id="comentarioVisita" placeholder="Comentario general de la visita (opcional)"></textarea>
-      <button id="btnEnviar" class="primary big" disabled>Enviar visita</button>
-      <p id="envioMsg" class="msg"></p>
-    </div>
+    <button id="btnEnviar" class="primary big" disabled>Enviar</button>
+    <p id="envioMsg" class="msg"></p>
 
     <button class="ghost volver">← Volver</button>
   </section>
