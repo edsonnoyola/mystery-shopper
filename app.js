@@ -31,6 +31,11 @@ $("btnEntrar").onclick = async () => {
     // primera vez: crear cuenta sola (se auto-confirma) y entrar de inmediato
     const alta = await sb.auth.signUp({ email, password, options: { data: { app: "ms" } } });
     if (alta.error) { $("authMsg").textContent = "No se pudo entrar: " + alta.error.message; return; }
+    if (alta.data.user && Array.isArray(alta.data.user.identities) && alta.data.user.identities.length === 0) {
+      // el correo ya tiene cuenta: la contraseña escrita no coincide
+      $("authMsg").textContent = "Ese correo ya tiene cuenta y la contraseña no coincide. Verifícala o pide al admin restablecerla.";
+      return;
+    }
     const reintento = await sb.auth.signInWithPassword({ email, password });
     if (reintento.error) { $("authMsg").textContent = "Cuenta creada. Intenta entrar de nuevo."; return; }
     data = reintento.data;
