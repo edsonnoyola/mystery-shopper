@@ -519,10 +519,32 @@ $("btnAdmin").onclick = async () => {
   show("adminView");
   $("adminLista").innerHTML = "<p class='muted'>Cargando…</p>";
 
-  const [{ data: visitas }, { data: fotosAll }] = await Promise.all([
+  const [{ data: visitas }, { data: fotosAll }, { data: productos }, { data: precios }] = await Promise.all([
     sb.from("ms_visitas").select("id, created_at, tipo, estado, score, resumen_ia, productos, evaluacion, comentario, pais, shopper_email, ms_tiendas(nombre, formato), ms_cotizaciones(marca, producto, formato, precio, moneda)").order("created_at", { ascending: false }).limit(40),
     sb.from("ms_fotos").select("etiquetas").not("etiquetas", "eq", "{}").limit(1000),
+    sb.from("ms_productos").select("id, marca, linea, formato, veces_visto").order("veces_visto", { ascending: false }).limit(40),
+    sb.from("ms_precios").select("producto_id, precio, moneda, pais").limit(2000),
   ]);
+
+  // catálogo que se armó solo con las capturas
+  const porProducto = {};
+  (precios || []).forEach((p) => {
+    (porProducto[p.producto_id] ||= []).push(p);
+  });
+  $("adminProductos").innerHTML = (productos || []).length
+    ? (productos || []).map((p) => {
+        const ps = porProducto[p.id] || [];
+        const nums = ps.map((x) => Number(x.precio)).filter((n) => !isNaN(n));
+        const moneda = ps[0]?.moneda || "";
+        const rango = nums.length
+          ? (Math.min(...nums) === Math.max(...nums)
+            ? `$${Math.min(...nums)} ${moneda}`
+            : `$${Math.min(...nums)}–$${Math.max(...nums)} ${moneda}`)
+          : "s/precio";
+        const paises = [...new Set(ps.map((x) => x.pais).filter(Boolean))].join(", ");
+        return `<div class="prod"><span>${[p.marca, p.linea].filter(Boolean).join(" ")} <span class="muted">${p.formato || ""}</span></span><span class="muted">visto ×${p.veces_visto}${paises ? " · " + paises : ""}</span><b>${rango}</b></div>`;
+      }).join("")
+    : "<p class='muted'>Se llenará solo conforme los shoppers capturen productos.</p>";
 
   const total = visitas?.length || 0;
   const conScore = (visitas || []).filter((v) => v.score != null);
