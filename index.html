@@ -42,6 +42,11 @@
   <section id="visitaView" class="view hidden">
     <h1>Nueva visita</h1>
 
+    <div class="card">
+      <p class="label">¿Qué estás evaluando?</p>
+      <div id="categoriaChips" class="chips"></div>
+    </div>
+
     <div id="pasoGps" class="card">
       <p id="gpsEstado">📍 Detectando tu ubicación…</p>
       <p id="gpsDireccion" class="muted"></p>
@@ -60,7 +65,7 @@
       <div class="eval-fila" data-campo="conocimiento"><span>🧠 Conocimiento del producto</span><div class="stars"></div></div>
       <div class="eval-fila" data-campo="claridad_precios"><span>🏷️ Claridad de precios</span><div class="stars"></div></div>
       <div class="eval-fila" data-campo="limpieza"><span>🧹 Limpieza del lugar</span><div class="stars"></div></div>
-      <div class="eval-fila" data-campo="marca_mencionada"><span>⭐ ¿Mencionaron / recomendaron nuestra marca?</span>
+      <div class="eval-fila" data-campo="marca_mencionada"><span id="lblMarca">⭐ ¿Mencionaron / recomendaron nuestra marca?</span>
         <div class="sino"><button type="button" data-v="si">Sí</button><button type="button" data-v="no">No</button></div>
       </div>
     </div>

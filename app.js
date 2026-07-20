@@ -63,6 +63,38 @@ let tiendaSel = null;    // seleccionada
 let fotos = [];          // [{blob, url, comentario}]
 let evaluacion = {};     // {saludo, conocimiento, claridad_precios, limpieza, marca_mencionada}
 let cotizaciones = [];   // [{marca, producto, formato, precio}]
+let categorias = [];     // giros disponibles (café, pisos, …)
+let categoriaSel = null;
+
+async function cargarCategorias() {
+  if (categorias.length) return;
+  const { data } = await sb.from("ms_categorias").select("clave, nombre, emoji, marca_objetivo").eq("activo", true).order("orden");
+  categorias = data || [];
+}
+
+function pintarCategorias() {
+  const cont = $("categoriaChips"); cont.innerHTML = "";
+  categorias.forEach((c, i) => {
+    const b = document.createElement("button"); b.type = "button";
+    b.className = "chip" + (i === 0 ? " sel" : "");
+    b.textContent = `${c.emoji || ""} ${c.nombre}`;
+    b.onclick = () => { seleccionarCategoria(c); [...cont.children].forEach((x) => x.classList.remove("sel")); b.classList.add("sel"); };
+    cont.appendChild(b);
+  });
+  if (categorias.length) seleccionarCategoria(categorias[0]);
+}
+
+function seleccionarCategoria(c) {
+  categoriaSel = c;
+  $("lblMarca").textContent = c.marca_objetivo
+    ? `⭐ ¿Mencionaron / recomendaron ${c.marca_objetivo}?`
+    : "⭐ ¿Mencionaron / recomendaron nuestra marca?";
+  // placeholders según giro
+  const esPisos = c.clave === "pisos";
+  $("cotMarca").placeholder = esPisos ? "Marca (ej. Cesantoni)" : "Marca (ej. Café Oro)";
+  $("cotProducto").placeholder = esPisos ? "Línea / SKU (ej. Fiore Mármol Beige)" : "Producto / sabor (ej. Clásico soluble)";
+  $("cotFormato").placeholder = esPisos ? "Formato (ej. 60x120)" : "Formato (frasco 200g)";
+}
 
 $("btnNueva").onclick = () => {
   geo = lugar = tiendaSel = null; tiendas = []; fotos = []; evaluacion = {}; cotizaciones = [];
@@ -75,6 +107,7 @@ $("btnNueva").onclick = () => {
   $("gpsEstado").textContent = "📍 Detectando tu ubicación…"; $("gpsDireccion").textContent = "";
   $("btnEnviar").disabled = true;
   show("visitaView");
+  cargarCategorias().then(pintarCategorias);
   detectarUbicacion();
 };
 
@@ -310,6 +343,8 @@ $("btnEnviar").onclick = async () => {
       pais: lugar?.pais, direccion: lugar?.direccion,
       comentario: $("comentarioVisita").value.trim() || null,
       evaluacion: Object.keys(evaluacion).length ? evaluacion : null,
+      categoria: categoriaSel?.clave || null,
+      marca_objetivo: categoriaSel?.marca_objetivo || null,
     }).select("id").single();
     if (ev) throw ev;
 
@@ -386,9 +421,9 @@ function cotizacionesHtml(cots) {
 function productosHtml(prods) {
   if (!Array.isArray(prods) || !prods.length) return "";
   const filas = prods.map((p) => {
-    const nombre = [p.marca, p.sabor_o_variedad].filter(Boolean).join(" ") || "(producto)";
-    const formato = [p.presentacion, p.gramaje].filter(Boolean).join(" ");
-    const precio = p.precio ? `${p.precio} ${p.moneda || ""}` : "s/precio";
+    const nombre = [p.marca, p.linea_o_variedad || p.sabor_o_variedad].filter(Boolean).join(" ") || "(producto)";
+    const formato = [p.formato || p.presentacion, p.gramaje].filter(Boolean).join(" ");
+    const precio = p.precio ? `${p.precio} ${p.moneda || ""}${p.unidad || ""}` : "s/precio";
     const enlace = p.origen_precio === "enlazado-otra-foto" ? " 🔗" : "";
     return `<div class="prod"><span>${nombre}${p.tostado ? ` <span class="muted">· ${p.tostado}</span>` : ""}</span><span class="muted">${formato}</span><b>${precio}${enlace}</b></div>`;
   }).join("");
