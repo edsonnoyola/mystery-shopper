@@ -3,78 +3,117 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Mystery Shopper</title>
+<title>Notas</title>
 <meta name="theme-color" content="#171210">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Mystery Shopper">
+<meta name="apple-mobile-web-app-title" content="Notas">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+
+<!-- iconos SVG reutilizables -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="i-cafe"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><path d="M6 2v2"/><path d="M10 2v2"/><path d="M14 2v2"/></g>
+    <g id="i-camara"><path d="M14.5 4h-5L7.5 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3.5Z"/><circle cx="12" cy="13" r="3"/></g>
+    <g id="i-video"><path d="m22 8-6 4 6 4V8Z"/><rect x="2" y="6" width="14" height="12" rx="2"/></g>
+    <g id="i-nota"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></g>
+    <g id="i-carpeta"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></g>
+    <g id="i-grafica"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></g>
+    <g id="i-pin"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></g>
+    <g id="i-mic"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></g>
+    <g id="i-galeria"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></g>
+    <g id="i-enviar"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></g>
+    <g id="i-salir"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></g>
+    <g id="i-check"><path d="M20 6 9 17l-5-5"/></g>
+  </defs>
+</svg>
+
 <header class="top">
-  <span class="logo">☕ Mystery Shopper</span>
-  <button id="btnSalir" class="ghost hidden">Salir</button>
+  <span class="logo"><svg class="ico"><use href="#i-cafe"/></svg> <b>Notas</b></span>
+  <button id="btnSalir" class="ghost hidden" aria-label="Salir"><svg class="ico"><use href="#i-salir"/></svg></button>
 </header>
+
+<!-- inputs de captura globales (los abren labels desde home y captura) -->
+<input id="inputFoto" type="file" accept="image/*" capture="environment" hidden>
+<input id="inputVideo" type="file" accept="video/*" capture="environment" hidden>
+<input id="inputGaleria" type="file" accept="image/*,video/*" multiple hidden>
 
 <main id="app">
 
   <!-- LOGIN -->
   <section id="authView" class="view">
-    <h1>Entrar</h1>
-    <p class="muted">Usa tu correo. Si es tu primera vez, la cuenta se crea sola.</p>
-    <input id="authEmail" type="email" placeholder="correo@ejemplo.com" autocomplete="email">
-    <input id="authPass" type="password" placeholder="contraseña" autocomplete="current-password">
-    <button id="btnEntrar" class="primary">Entrar</button>
-    <p id="authMsg" class="msg"></p>
+    <div class="auth-card">
+      <div class="monograma"><svg class="ico lg"><use href="#i-cafe"/></svg></div>
+      <h1>Entrar</h1>
+      <p class="muted" style="text-align:center">Usa tu correo. Si es tu primera vez, la cuenta se crea sola.</p>
+      <input id="authEmail" type="email" placeholder="correo@ejemplo.com" autocomplete="email">
+      <input id="authPass" type="password" placeholder="contraseña" autocomplete="current-password">
+      <button id="btnEntrar" class="primary big">Entrar</button>
+      <p id="authMsg" class="msg"></p>
+    </div>
   </section>
 
   <!-- HOME -->
   <section id="homeView" class="view hidden">
-    <h1>Hola 👋</h1>
-    <button id="btnNueva" class="primary big">📸 Foto</button>
-    <button id="btnVideo" class="primary big">🎥 Video</button>
-    <button id="btnNota" class="secondary big">📝 Nota de un lugar</button>
-    <button id="btnMis" class="secondary big">🗂 Mis capturas</button>
-    <button id="btnAdmin" class="secondary big hidden">📊 Panel admin</button>
+    <h1>Hola</h1>
+    <div id="borradorCard" class="card alerta hidden">
+      <p class="label" style="margin:0 0 0.5rem">Tienes una captura sin enviar</p>
+      <div style="display:flex; gap:0.5rem">
+        <button id="btnBorradorSeguir" class="primary" style="margin:0">Continuar</button>
+        <button id="btnBorradorTirar" class="ghost" style="margin:0">Descartar</button>
+      </div>
+    </div>
+    <div class="home-grid">
+      <label class="tile" for="inputFoto" id="tileFoto"><svg class="ico lg"><use href="#i-camara"/></svg> Foto</label>
+      <label class="tile video" for="inputVideo" id="tileVideo"><svg class="ico lg"><use href="#i-video"/></svg> Video</label>
+    </div>
+    <button id="btnNota" class="secondary big"><svg class="ico"><use href="#i-nota"/></svg> Nota de un lugar</button>
+    <button id="btnMis" class="list-row"><svg class="ico"><use href="#i-carpeta"/></svg> Mis capturas</button>
+    <button id="btnAdmin" class="list-row hidden"><svg class="ico"><use href="#i-grafica"/></svg> Panel</button>
   </section>
 
   <!-- CAPTURA -->
   <section id="visitaView" class="view hidden">
 
     <div class="fila-captura">
-      <label class="btn-cap">📸 Foto<input id="inputFoto" type="file" accept="image/*" capture="environment" hidden></label>
-      <label class="btn-cap">🎥 Video<input id="inputVideo" type="file" accept="video/*" capture="environment" hidden></label>
+      <label class="btn-cap" for="inputFoto"><svg class="ico"><use href="#i-camara"/></svg> Foto</label>
+      <label class="btn-cap" for="inputVideo"><svg class="ico"><use href="#i-video"/></svg> Video</label>
+      <label class="btn-cap secundario" for="inputGaleria"><svg class="ico"><use href="#i-galeria"/></svg> Galería</label>
     </div>
     <p id="fotoMsg" class="msg"></p>
 
     <div id="fotosLista"></div>
 
     <div class="card" id="lugarCard">
-      <p id="lugarLinea" class="muted" style="margin:0">📍 Detectando el lugar…</p>
+      <p class="lugar-nombre" id="lugarLinea"><svg class="ico pulso"><use href="#i-pin"/></svg> Detectando el lugar…</p>
+      <p class="lugar-meta" id="lugarMeta"></p>
+      <button id="btnGpsReintentar" class="ghost small hidden" style="margin:0.4rem 0 0">Reintentar ubicación</button>
       <div id="tiendaChips" class="chips hidden"></div>
       <input id="tiendaManual" placeholder="Escribe el nombre del lugar" class="hidden">
     </div>
 
     <div class="card">
-      <textarea id="comentarioVisita" placeholder="Cuéntale a la IA: qué viste, qué te llamó la atención… (escribe o tócale 🎤)"></textarea>
-      <button id="btnMicNota" class="secondary small" type="button">🎤 Dictar con la voz</button>
+      <textarea id="comentarioVisita" placeholder="¿Qué viste? ¿Qué te llamó la atención? (escribe o dicta)"></textarea>
+      <button id="btnMicNota" class="secondary small" type="button"><svg class="ico"><use href="#i-mic"/></svg> Dictar con la voz</button>
     </div>
 
     <details class="card">
-      <summary>⭐ Evaluación del servicio (opcional)</summary>
-      <div class="eval-fila" data-campo="saludo"><span>👋 Saludo y atención</span><div class="stars"></div></div>
-      <div class="eval-fila" data-campo="conocimiento"><span>🧠 Conocimiento del producto</span><div class="stars"></div></div>
-      <div class="eval-fila" data-campo="claridad_precios"><span>🏷️ Claridad de precios</span><div class="stars"></div></div>
-      <div class="eval-fila" data-campo="limpieza"><span>🧹 Limpieza del lugar</span><div class="stars"></div></div>
-      <div class="eval-fila" data-campo="marca_mencionada"><span id="lblMarca">⭐ ¿Mencionaron / recomendaron nuestra marca?</span>
+      <summary>Evaluación del servicio (opcional)</summary>
+      <div class="eval-fila" data-campo="saludo"><span>Saludo y atención</span><div class="stars"></div></div>
+      <div class="eval-fila" data-campo="conocimiento"><span>Conocimiento del producto</span><div class="stars"></div></div>
+      <div class="eval-fila" data-campo="claridad_precios"><span>Claridad de precios</span><div class="stars"></div></div>
+      <div class="eval-fila" data-campo="limpieza"><span>Limpieza del lugar</span><div class="stars"></div></div>
+      <div class="eval-fila" data-campo="marca_mencionada"><span id="lblMarca">¿Recomendaron el producto?</span>
         <div class="sino"><button type="button" data-v="si">Sí</button><button type="button" data-v="no">No</button></div>
       </div>
     </details>
 
     <details class="card">
-      <summary>💲 Precios cotizados (opcional)</summary>
+      <summary>Precios cotizados (opcional)</summary>
       <div id="cotizaLista" style="margin-top:0.6rem"></div>
       <div class="cotiza-form">
         <input id="cotMarca" placeholder="Marca (ej. Café Oro)">
@@ -87,35 +126,50 @@
       </div>
     </details>
 
-    <button id="btnEnviar" class="primary big" disabled>Enviar</button>
+    <div id="barra" class="progreso hidden"><div id="barraFill"></div></div>
+    <button id="btnEnviar" class="primary big" disabled><svg class="ico"><use href="#i-enviar"/></svg> <span id="btnEnviarTxt">Enviar</span></button>
     <p id="envioMsg" class="msg"></p>
 
     <button class="ghost volver">← Volver</button>
   </section>
 
-  <!-- MIS VISITAS -->
+  <!-- MIS CAPTURAS -->
   <section id="misView" class="view hidden">
-    <h1>Mis visitas</h1>
+    <h1>Mis capturas</h1>
     <div id="misLista"></div>
     <button class="ghost volver">← Volver</button>
   </section>
 
   <!-- ADMIN -->
   <section id="adminView" class="view hidden">
-    <h1>Panel admin</h1>
+    <h1>Panel</h1>
     <div id="adminResumen" class="card"></div>
     <h2>Hallazgos más repetidos</h2>
     <div id="adminEtiquetas" class="chips"></div>
-    <h2>🛒 Catálogo detectado por la IA</h2>
+    <h2>Catálogo detectado por la IA</h2>
     <div id="adminProductos"></div>
-    <h2>Visitas recientes</h2>
+    <h2>Capturas recientes</h2>
     <div id="adminLista"></div>
     <button class="ghost volver">← Volver</button>
   </section>
 
 </main>
 
-<div id="modalFoto" class="modal hidden"><img id="modalImg"><pre id="modalAnalisis"></pre><button class="ghost" onclick="document.getElementById('modalFoto').classList.add('hidden')">Cerrar</button></div>
+<!-- overlay de éxito -->
+<div id="exitoOverlay" class="exito hidden">
+  <div class="check"><svg class="ico lg"><use href="#i-check"/></svg></div>
+  <p><b>Enviado</b></p>
+  <p class="muted">La IA ya está trabajando</p>
+</div>
+
+<!-- modal de análisis -->
+<div id="modalFoto" class="modal hidden">
+  <div class="modal-body">
+    <img id="modalImg" alt="Captura">
+    <div id="modalAnalisis"></div>
+    <button id="modalCerrar" class="secondary">Cerrar</button>
+  </div>
+</div>
 
 <script type="module" src="app.js"></script>
 </body>

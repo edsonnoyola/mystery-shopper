@@ -1,7 +1,7 @@
 {
-  "name": "Mystery Shopper",
-  "short_name": "MysteryShop",
-  "description": "Auditorías de mystery shopper con fotos y análisis IA",
+  "name": "Notas",
+  "short_name": "Notas",
+  "description": "Notas de campo con fotos",
   "start_url": "index.html",
   "scope": "./",
   "display": "standalone",
