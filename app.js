@@ -2,7 +2,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = "https://kmbyezowarksulzauewp.supabase.co";
 const SUPABASE_KEY = "sb_publishable_Q3g-mC_WRnzyMLzQg6dubQ_Wu1djthb";
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+// sesión persistente: se entra UNA vez y queda guardada en el teléfono
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
+});
 
 const $ = (id) => document.getElementById(id);
 const views = ["authView", "homeView", "visitaView", "misView", "adminView"];
@@ -21,10 +24,26 @@ window.addEventListener("beforeunload", (e) => { if (subiendo) e.preventDefault(
 
 // ---------- AUTH ----------
 async function initAuth() {
-  const { data } = await sb.auth.getSession();
+  // 1) sesión guardada en el teléfono
+  let { data } = await sb.auth.getSession();
+  // 2) si el token venció mientras la app estuvo cerrada, refrescarlo en vez de pedir login
+  if (!data.session) {
+    const ref = await sb.auth.refreshSession().catch(() => null);
+    if (ref?.data?.session) data = ref.data;
+  }
   if (data.session) { usuario = data.session.user; await entrar(); }
   else show("authView");
+  // si el token se refresca o muere en caliente, mantener el estado correcto
+  sb.auth.onAuthStateChange((evento, sesion) => {
+    if (evento === "TOKEN_REFRESHED" && sesion) usuario = sesion.user;
+    if (evento === "SIGNED_OUT") { usuario = null; show("authView"); }
+  });
 }
+
+// Enter para entrar (menos fricción en el login)
+["authEmail", "authPass"].forEach((id) =>
+  $(id).addEventListener("keydown", (e) => { if (e.key === "Enter") $("btnEntrar").click(); })
+);
 
 $("btnEntrar").onclick = async () => {
   const email = $("authEmail").value.trim().toLowerCase();
@@ -60,7 +79,12 @@ async function entrar() {
   revisarBorrador();
 }
 
-$("btnSalir").onclick = async () => { await sb.auth.signOut(); location.reload(); };
+// cerrar sesión: discreto y con confirmación para que nadie salga por accidente
+$("btnSalir").onclick = async () => {
+  if (!confirm("¿Cerrar sesión? Tendrás que volver a escribir tu correo y contraseña.")) return;
+  await sb.auth.signOut();
+  location.reload();
+};
 
 // volver con guarda: no perder trabajo sin querer
 document.querySelectorAll(".volver").forEach((b) => (b.onclick = () => {
